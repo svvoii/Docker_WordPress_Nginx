@@ -1,14 +1,14 @@
-# Docker Wordpress Nginx Settup
+# Docker Wordpress Nginx Setup
 
 ### Description
 
-This repo contains a docker-compose file that will set up a wordpress site with nginx and mysql.  
-This README will explain the steps of the set up for educational purposes.  
+This repo contains a docker-compose file that will set up a wordpress site with nginx and mysql as separate services/containers.  
+This README will explain the steps of the set up for educational purposes.   
 The images used are the official images from docker hub. The main purpose is to show how these services can be set up and how they interact with each other.  
 `nginx` is used to serve the static files and to reverse proxy the requests to the wordpress container.  
 `wordpress` is used to serve, ctraete and manage the wordpress site.
 `mysql` is used to store the data of the wordpress site.
-`phpmyadmin` is used to manage the mysql database.
+`phpmyadmin` (as a part of wordpress container) is used to manage the mysql database.
 
 ### 1. Basic Set Up
 ```yaml
