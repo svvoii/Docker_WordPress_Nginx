@@ -18,8 +18,8 @@ services:
 
   # Database
   mysql:
-    image: mysql:latest
     container_name: mysql-db
+    image: mysql:latest
     env_file:
       - .env
     volumes:
@@ -30,8 +30,10 @@ services:
 
   # Wordpress + PHP-FPM 8.2 on Alpine
   wordpress:
-    image: wordpress:fpm-alpine
+#    container_name: wordpress-php-custom
     container_name: wordpress-alpine
+    build: ./wordpress
+    image: wordpress:custom
     depends_on:
       - mysql
     env_file:
