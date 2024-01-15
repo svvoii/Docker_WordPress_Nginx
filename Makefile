@@ -3,6 +3,20 @@ MAGENTA=\033[0;35m
 CYAN=\033[0;36m
 RESET=\033[0m
 
+help:
+	@echo "$(CYAN)Usage:$(RESET)"
+	@echo "  make [command]"
+	@echo
+	@echo "$(CYAN)Available Commands:$(RESET)"
+	@echo "  pull         Pull images from Docker Hub"
+	@echo "  up           Create directories on the host, create custom volumes, network and starting containers"
+	@echo "  down         Stopping and removing containers"
+	@echo "  restart      down + up"
+	@echo "  clean_vol    down + Removing all volumes"
+	@echo "  clean_all    clean_vol + Removing all images, volumes, networks and directories with data on the host"
+	@echo "  ls           Listing images, running containers, volumes and networks"
+	@echo "  logs         Showing logs"
+
 pull:
 	@echo "$(CYAN)Pulling images from Docker Hub...$(RESET)"
 	docker compose pull
