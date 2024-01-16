@@ -14,19 +14,28 @@ services:
       - wordpress:/var/www/html
     networks:
       - wordpress_network
-    restart: always
+#    restart: always
 
   # Database
-  mysql:
-    container_name: mysql-db
-    image: mysql:latest
+  mariadb:
+    container_name: database
+    image: mariadb:latest
     env_file:
       - .env
     volumes:
       - database:/var/lib/mysql
     networks:
       - wordpress_network
-    restart: always
+  # mysql:
+  #   container_name: database
+  #   image: mysql:latest
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - database:/var/lib/mysql
+  #   networks:
+  #     - wordpress_network
+#    restart: always
 
   # Wordpress + PHP-FPM 8.2 on Alpine
   wordpress:
@@ -35,14 +44,14 @@ services:
     build: ./wordpress
     image: wordpress:custom
     depends_on:
-      - mysql
+      - mariadb
     env_file:
       - .env
     volumes:
       - wordpress:/var/www/html
     networks:
       - wordpress_network
-    restart: always
+#    restart: always
 
 volumes:
   wordpress:

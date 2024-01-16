@@ -4,6 +4,11 @@ CYAN=\033[0;36m
 RED=\033[0;31m
 RESET=\033[0m
 
+# Services
+DB=mariadb
+WP=wordpress
+NGX=nginx
+
 help:
 	@echo "$(CYAN)Usage:$(RESET)"
 	@echo "  make [command]"
@@ -22,9 +27,9 @@ build:
 	@echo "$(CYAN)Creating empty directories on the host...$(RESET)"
 	@mkdir -p ./wordpress_data ./database_data
 	@echo "$(CYAN)Building images...$(RESET)"
-	docker compose build wordpress
+	docker compose build ${WP}
 	@echo "$(CYAN)Pulling images from Docker Hub...$(RESET)"
-	docker compose pull mysql nginx
+	docker compose pull ${DB} ${NGX}
 
 up:
 #	@echo "$(CYAN)Creating empty directories on the host...$(RESET)"
@@ -44,9 +49,17 @@ clean_vol: down
 	@if [ $$(docker volume ls -q | wc -l) -ne 0 ]; then docker volume rm $$(docker volume ls -q); fi
 	sudo rm -rf ./wordpress_data ./database_data
 
-clean_all: clean_vol
+clean_img: down
+	@echo "$(RED)Removing all images...$(RESET)"
+	docker rmi $$(docker images -q) --force
+
+clean_net: down
+	@echo "$(RED)Removing all networks...$(RESET)"
+	docker network prune --force
+	docker builder prune --all --force
+
+clean_all: clean_vol clean_img clean_net
 	@echo "$(RED)Removing all images, volumes, networks and directories with data on the host...$(RESET)"
-	@docker system prune --all --force
 
 ls:
 	@echo "$(MAGENTA) -> Listing images...$(RESET)" && docker image ls
