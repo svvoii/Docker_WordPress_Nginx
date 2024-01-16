@@ -14,7 +14,7 @@ services:
       - wordpress:/var/www/html
     networks:
       - wordpress_network
-#    restart: always
+    restart: always
 
   # Database
   mariadb:
@@ -26,6 +26,7 @@ services:
       - database:/var/lib/mysql
     networks:
       - wordpress_network
+    restart: always
   # mysql:
   #   container_name: database
   #   image: mysql:latest
@@ -35,11 +36,9 @@ services:
   #     - database:/var/lib/mysql
   #   networks:
   #     - wordpress_network
-#    restart: always
 
   # Wordpress + PHP-FPM 8.2 on Alpine
   wordpress:
-#    container_name: wordpress-php-custom
     container_name: wordpress-alpine
     build: ./wordpress
     image: wordpress:custom
@@ -51,7 +50,7 @@ services:
       - wordpress:/var/www/html
     networks:
       - wordpress_network
-#    restart: always
+    restart: always
 
 volumes:
   wordpress:

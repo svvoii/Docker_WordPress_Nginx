@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-# Adding "edge" repository for lapest php version
+# Adding "edge" repository for latest php version
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 
@@ -25,13 +25,14 @@ RUN apk update && apk add --no-cache \
 	php-dom \
 	php-phar
 
-# Copying php-fpm config files
-COPY ./www.conf /etc/php7/php-fpm.d/www.conf
-COPY ./php-fpm.conf /etc/php7/php-fpm.conf
+# Copying the `php-fpm.conf` and `www.conf` files to the appropriate location
+# !!! The directory might be different depending on the PHP version !!!
+# COPY ./www.conf /etc/php7/php-fpm.d/www.conf
+# COPY ./php-fpm.conf /etc/php7/php-fpm.conf
+COPY ./php-fpm.conf /etc/php82/php-fpm.conf
+COPY ./www.conf /etc/php82/php-fpm.d/www.conf
 
 RUN mkdir -p /var/www/html
-
-COPY ./wp-config.php /var/www/html/wp-config.php
 
 # Downloading WordPress
 RUN curl -O https://wordpress.org/latest.tar.gz \
@@ -45,7 +46,8 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 	&& chmod +x wp-cli.phar \
 	&& mv wp-cli.phar /usr/bin/wp
 
-COPY ./wp-config.php /tmp/wp-config.php
+COPY ./wp-config.php /var/www/html/wp-config.php
+COPY ./test.php /var/www/html/test.php
 
 COPY ./new-wp-user.sh /tmp/new-wp-user.sh
 RUN chmod +x /tmp/new-wp-user.sh

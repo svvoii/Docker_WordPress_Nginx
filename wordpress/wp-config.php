@@ -37,6 +37,9 @@ define( 'DB_CHARSET', 'utf8' );
 /** The database collate type. Don't change this if in doubt. */
 define( 'DB_COLLATE', '' );
 
+/** Disable email sending in WordPress */
+define( 'WP_MAIL', false );
+
 /**#@+
  * Authentication unique keys and salts.
  *
