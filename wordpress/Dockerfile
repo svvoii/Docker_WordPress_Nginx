@@ -32,22 +32,22 @@ RUN apk update && apk add --no-cache \
 COPY ./php-fpm.conf /etc/php82/php-fpm.conf
 COPY ./www.conf /etc/php82/php-fpm.d/www.conf
 
-RUN mkdir -p /var/www/html
+# RUN mkdir -p /var/www/html
 
 # Downloading WordPress
-RUN curl -O https://wordpress.org/latest.tar.gz \
-	&& tar -xzvf latest.tar.gz -C /var/www/html --strip-components=1 \
-	&& rm latest.tar.gz
+# RUN curl -O https://wordpress.org/latest.tar.gz \
+# 	&& tar -xzvf latest.tar.gz -C /var/www/html --strip-components=1 \
+# 	&& rm latest.tar.gz
 
-RUN chown -R www-data:www-data /var/www/html
+# RUN chown -R www-data:www-data /var/www/html
 
 # Installing wp-cli
-RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-	&& chmod +x wp-cli.phar \
-	&& mv wp-cli.phar /usr/bin/wp
+# RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+# 	&& chmod +x wp-cli.phar \
+# 	&& mv wp-cli.phar /usr/bin/wp
 
-COPY ./wp-config.php /var/www/html/wp-config.php
-COPY ./test.php /var/www/html/test.php
+# COPY ./wp-config.php /var/www/html/wp-config.php
+# COPY ./test.php /var/www/html/test.php
 
 COPY ./new-wp-user.sh /tmp/new-wp-user.sh
 RUN chmod +x /tmp/new-wp-user.sh

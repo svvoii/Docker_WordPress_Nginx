@@ -29,6 +29,25 @@ if ! mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "USE ${MYSQL_DAT
 fi 
 
 #########################################################################
+
+mkdir -p /var/www/html
+
+cd /var/www/html
+
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
+chmod +x wp-cli.phar
+
+mv wp-cli.phar /usr/local/bin/wp
+
+wp core download --allow-root --path=/var/www/html/
+
+wp config create --dbname="${MYSQL_DATABASE}" --dbuser="${MYSQL_USER}" --dbpass="${MYSQL_PASSWORD}" --dbhost="${MYSQL_HOST}" --allow-root --path=/var/www/html/
+# wp core config --dbname="${MYSQL_DATABASE}" --dbuser="${MYSQL_USER}" --dbpass="${MYSQL_PASSWORD}" --dbhost="${MYSQL_HOST}" --allow-root --path=/var/www/html/
+
+wp core install --url="${WP_URL}" --title="${WP_TITLE}" --admin_user="${WP_USER}" --admin_password="${WP_PASS}" --admin_email="${WP_EMAIL}" --allow-root --path=/var/www/html/
+
+#########################################################################
 # !!! THIS PART IS RESPONSIBLE FOR SETTING UP WORDPRESS AND ITS USER !!!
 
 # The following commands is needed for PHP to be able to identify the host name, needed to generate URLs
@@ -36,7 +55,7 @@ fi
 
 # Check if `wp-config.php` file exists (this is the file that contains the database credentials)
 # if [ ! -f /var/www/html/wp-config.php ]; then
-# 	# Creating `wp-config.php` file
+
 # 	echo "Creating wp-config.php file..."
 # 	wp config create --dbname="${MYSQL_DATABASE}" --dbuser="${MYSQL_USER}" --dbpass="${MYSQL_PASSWORD}" --dbhost="${MYSQL_HOST}" --allow-root --path=/var/www/html/
 # else
