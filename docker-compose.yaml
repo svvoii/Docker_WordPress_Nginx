@@ -19,23 +19,26 @@ services:
   # Database
   mariadb:
     container_name: database
-    image: mariadb:latest
+    build: ./mariadb
+    image: mariadb:custom
     env_file:
       - .env
     volumes:
       - database:/var/lib/mysql
     networks:
       - wordpress_network
-    restart: always
-  # mysql:
+#    restart: always
+
+  # mariadb:
   #   container_name: database
-  #   image: mysql:latest
+  #   image: mariadb:latest
   #   env_file:
   #     - .env
   #   volumes:
   #     - database:/var/lib/mysql
   #   networks:
   #     - wordpress_network
+  #   restart: always
 
   # Wordpress + PHP-FPM 8.2 on Alpine
   wordpress:

@@ -28,9 +28,9 @@ build:
 	@echo "$(CYAN)Creating empty directories on the host...$(RESET)"
 	@mkdir -p ./wordpress_data ./database_data
 	@echo "$(CYAN)Building images...$(RESET)"
-	docker compose build ${WP}
+	docker compose build ${DB} ${WP}
 	@echo "$(CYAN)Pulling images from Docker Hub...$(RESET)"
-	docker compose pull ${DB} ${NGX}
+	docker compose pull ${NGX}
 
 up:
 	@echo "$(CYAN)Creating custom volumes, network and starting containers...$(RESET)"
@@ -60,6 +60,18 @@ ls:
 	@echo "$(MAGENTA) -> Listing volumes...$(RESET)" && docker volume ls
 	@echo "$(MAGENTA) -> Listing networks...$(RESET)" && docker network ls | awk '$$2 !~ /^(bridge|host|none)$$/'
 
+log_1:
+	@echo "$(MAGENTA)Showing logs for ${DB}...$(RESET)"
+	docker compose logs ${DB}	
+
+log_2:
+	@echo "$(MAGENTA)Showing logs for ${WP}...$(RESET)"
+	docker compose logs ${WP}
+
+log_3:
+	@echo "$(MAGENTA)Showing logs for ${NGX}...$(RESET)"
+	docker compose logs ${NGX}
+
 logs:
-	@echo "$(MAGENTA)Showing logs...$(RESET)"
-	docker compose logs -f
+	@echo "$(MAGENTA)Showing logs from all containers...$(RESET)"
+	docker compose logs

@@ -5,6 +5,7 @@ RUN apk update && apk add \
 	mariadb \
 	mariadb-client
 
-COPY ./my.cnf /etc/mysql/my.cnf
+COPY ./db-setup.sh /tmp/db-setup.sh
 
-CMD ["mysqld"]
+#CMD ["mysqld"]
+ENTRYPOINT ["sh", "/tmp/db-setup.sh"]
