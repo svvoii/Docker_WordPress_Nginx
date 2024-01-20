@@ -1,48 +1,24 @@
 #!/bin/sh
 echo "Starting wp-setup.sh script..."
 
-# Both [www-data] user and [www-data] group must be present for php-fpm to run as non-root user 
-addgroup -g 82 -s www-data 2>/dev/null
-adduser -u 82 -D -S -G www-data www-data
-
-# The database container must be available before we can continue with the following steps
-# Waiting for database container to be available
-while ! mysqladmin ping -h"${MYSQL_HOST}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
+# The database container must be available before continuing with the wp setup
+# Waiting for proper database to be created in the database container
+while ! mysql -h"${MYSQL_HOST}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" -D"${MYSQL_DATABASE}" 2>/dev/null; do
 	echo "Waiting for MySQL server to start..."
 	sleep 2
 done
 
 echo "MySQL server is up and running.."
 
-# !!! MANUAL SETUP OF THE DATABASE AND ITS WORDPRESS USER IS NOT NEEDED IN THIS CASE. THIS IS DONE AUTOMATICALLY WITH THE FOLLOWING STEPS BELLOW.. !!!
-
-# Using conditional here to avoid executing the following steps if the database already exists
-# if ! mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "USE ${MYSQL_DATABASE};" > /dev/null 2>&1; then
-# if ! mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "USE ${MYSQL_DATABASE};"; then
-# 	echo "Creating WordPress database..."
-# 	#echo "host: ${MYSQL_HOST}, user: ${MYSQL_USER}, password: ${MYSQL_PASSWORD}, database: ${MYSQL_DATABASE}, root password: ${MYSQL_ROOT_PASSWORD}"
-
-# 	echo "Creating WordPress database: ${MYSQL_DATABASE} ..."
-# 	mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};"
-
-# 	echo "Creating WordPress user: ${MYSQL_USER} ..."
-# 	mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-
-# 	echo "Granting privileges to user: ${MYSQL_USER} ..."
-# 	mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';"
-
-# 	echo "Flushing privileges..."
-# 	# Flush the privileges to ensure they take effect
-# 	mysql -h ${MYSQL_HOST} -u root -p${MYSQL_ROOT_PASSWORD} -e "FLUSH PRIVILEGES;"
-# else 
-# 	echo "WordPress database already exists..."
-# fi 
-
 #########################################################################
 
 # !!! THIS PART IS RESPONSIBLE FOR SETTING UP WORDPRESS, WORDPRESS DATABASE, ITS USER AND WP USER ITSELF !!!
 # The `if` statement below is needed to avoid executing the following steps when the container is restarted
 if ! $(wp core is-installed --allow-root --path=/var/www/html/); then
+
+	# Both [www-data] user and [www-data] group must be present for php-fpm to run as non-root user 
+	addgroup -g 82 -s www-data 2>/dev/null
+	adduser -u 82 -D -S -G www-data www-data
 
 	echo "Installing WordPress..."
 

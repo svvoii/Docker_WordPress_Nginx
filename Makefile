@@ -56,7 +56,7 @@ clean_all: clean_vol clean_img
 
 ls:
 	@echo "$(MAGENTA) -> Listing images...$(RESET)" && docker image ls
-	@echo "$(MAGENTA) -> Listing running containers...$(RESET)" && docker ps
+	@echo "$(MAGENTA) -> Listing running containers...$(RESET)" && docker ps -a
 	@echo "$(MAGENTA) -> Listing volumes...$(RESET)" && docker volume ls
 	@echo "$(MAGENTA) -> Listing networks...$(RESET)" && docker network ls | awk '$$2 !~ /^(bridge|host|none)$$/'
 
