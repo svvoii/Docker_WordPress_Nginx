@@ -8,7 +8,25 @@ The images used are the official images from docker hub. The main purpose is to 
 `nginx` is used to serve the static files and to reverse proxy the requests to the wordpress container.  
 `wordpress` is used to serve, ctraete and manage the wordpress site.
 `mysql` is used to store the data of the wordpress site.
-`phpmyadmin` (as a part of wordpress container) is used to manage the mysql database.
+`phpmyadmin` (as a part of wordpress container) is used to manage the mysql database.  
+
+#### HOW TO USE
+There is a `Makefile` that helps to run docker commands to build, run, stop, remove containers and volumes.  
+Commands:
+`make help` - displays the help menu  
+`make build` - builds the containers
+`make up` - runs the containers  
+`make down` - stops and removes the containers  
+`make clean_all` - stops and removes the containers and volumes  
+`make rebuild` - rebuilds the containers (wont run them)  
+`make ls` - lists images, running containers, volumes and networks  
+`make log_1` - displays the logs of the first container  
+`make log_2` - displays the logs of the second container  
+`make log_3` - displays the logs of the third container  
+`make logs` - displays the logs of the running containers  
+
+Bellow are the stages and steps of the set up. Starting with the basic set with pre-built images from docker hub.  
+Following steps will show how to build custom images for wordpress, nginx and mysql/mariadb. All the images will be based on `alpine:latest` official image, which is the lightest image. The end result will be a custom wordpress site with custom domain name and ssl self-signed certificate. The size of the images will be around 450MB.  
 
 ### 1. Basic Set Up
 ```yaml
@@ -500,7 +518,9 @@ The next step will be to customize the `nginx` container.
 
 ### 5. Customizing the nginx container.  
 
-The nginx container will be customized to serve the static files and to reverse proxy the requests to the wordpress container only, including `/wp-admin`, `/wp-login.php`, `/phpmyadmin`.
+The nginx container will be customized to serve the static files and to reverse proxy the requests to the wordpress container only, including `/wp-admin`, `/wp-login.php`, `/phpmyadmin`.  
+
+We will also add a custom domain name `sbocanci.42.fr` to access the wordpress site. As well as setup ssl self-signed certificate to allow `https` connection.  
 
 ```Dockefile
 # This will build the NGINX custom image
@@ -575,3 +595,9 @@ http {
 	}
 }
 ```
+
+The final `docker-compose.yaml` file can be in this repository.  
+
+There is also a `Makefile` that helps to run docker commands to build, run, stop, remove containers and volumes.  
+
+...

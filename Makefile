@@ -14,24 +14,22 @@ help:
 	@echo "  make [command]"
 	@echo
 	@echo "$(CYAN)Available Commands:$(RESET)"
-	@echo "  build        Builds custom or/and pulls images from Docker Hub"
+	@echo "  build        Builds custom docker images"
 	@echo "  up           Create directories on the host, create custom volumes, network and starting containers"
-	@echo "  down         Stopping and removing containers"
-	@echo "  restart      down + up"
-	@echo "  clean_vol    down + Removing all volumes"
-	@echo "  clean_img    down + Removing all images"
-	@echo "  clean_all    clean_vol + clean_img"
-	@echo "  ls           Listing images, running containers, volumes and networks"
-	@echo "  logs         Showing logs"
+	@echo "  down         Stopping and removing running containers"
+	@echo "  clean-all    Bringd down all containers, removes all volumes and directories with data on the host"
+	@echo "  rebuild      Executes 'clean_all' and builds fresh images"
+	@echo "  ls           Lists images, containers, volumes and networks"
+	@echo "  log-1        Showing logs for ${DB}"
+	@echo "  log-2        Showing logs for ${WP}"
+	@echo "  log-3        Showing logs for ${NGX}"
+	@echo "  logs         Showing all logs"
 
 build:
 	@echo "$(CYAN)Creating empty directories on the host...$(RESET)"
 	@mkdir -p ./wordpress_data ./database_data
 	@echo "$(CYAN)Building images...$(RESET)"
 	docker compose build
-#	docker compose build ${DB} ${WP}
-#	@echo "$(CYAN)Pulling images from Docker Hub...$(RESET)"
-#	docker compose pull ${NGX}
 
 up:
 	@echo "$(CYAN)Creating custom volumes, network and starting containers...$(RESET)"
@@ -42,18 +40,14 @@ down:
 	docker compose down
 	docker container prune --force
 
-restart: down up
-
-clean_vol: down
+clean-all: down
 	@echo "$(RED)Removing all volumes and directories with data on the host...$(RESET)"
 	@if [ $$(docker volume ls -q | wc -l) -ne 0 ]; then docker volume rm $$(docker volume ls -q); fi
 	sudo rm -rf ./wordpress_data ./database_data
-
-clean_img: down
 	@echo "$(RED)Removing all images...$(RESET)"
 	docker rmi $$(docker images -q) --force
 
-clean_all: clean_vol clean_img 
+rebuild: clean_all build
 
 ls:
 	@echo "$(MAGENTA) -> Listing images...$(RESET)" && docker image ls
@@ -61,18 +55,20 @@ ls:
 	@echo "$(MAGENTA) -> Listing volumes...$(RESET)" && docker volume ls
 	@echo "$(MAGENTA) -> Listing networks...$(RESET)" && docker network ls | awk '$$2 !~ /^(bridge|host|none)$$/'
 
-log_1:
+log-1:
 	@echo "$(MAGENTA)Showing logs for ${DB}...$(RESET)"
 	docker compose logs ${DB}	
 
-log_2:
+log-2:
 	@echo "$(MAGENTA)Showing logs for ${WP}...$(RESET)"
 	docker compose logs ${WP}
 
-log_3:
+log-3:
 	@echo "$(MAGENTA)Showing logs for ${NGX}...$(RESET)"
 	docker compose logs ${NGX}
 
 logs:
 	@echo "$(MAGENTA)Showing logs from all containers...$(RESET)"
 	docker compose logs
+
+.PHONY: help build up down clean_all rebuild ls log_1 log_2 log_3 logs
