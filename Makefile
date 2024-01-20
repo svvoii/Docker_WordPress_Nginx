@@ -28,9 +28,10 @@ build:
 	@echo "$(CYAN)Creating empty directories on the host...$(RESET)"
 	@mkdir -p ./wordpress_data ./database_data
 	@echo "$(CYAN)Building images...$(RESET)"
-	docker compose build ${DB} ${WP}
-	@echo "$(CYAN)Pulling images from Docker Hub...$(RESET)"
-	docker compose pull ${NGX}
+	docker compose build
+#	docker compose build ${DB} ${WP}
+#	@echo "$(CYAN)Pulling images from Docker Hub...$(RESET)"
+#	docker compose pull ${NGX}
 
 up:
 	@echo "$(CYAN)Creating custom volumes, network and starting containers...$(RESET)"

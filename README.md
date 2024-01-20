@@ -116,6 +116,7 @@ The `wordpress_data` folder is also shared with the nginx container.
 In order to make this work, so the nginx container can serve the wordpress files, the `default.conf` file is added in the `nginx` folder.:  
 
 ```nginx
+# default.conf
 upstream php {
 	server wordpress-alpine:9000;
 }
@@ -289,14 +290,9 @@ The `wp-setup.sh` script is used to download, install and configure the latest v
 #!/bin.sh
 echo "Starting wp-setup.sh script..."
 
-# Making sure that both [www-data] user and [www-data] group are present.
-# This is necessary for php-fpm to run smoothly as non-root user 
-addgroup -g 82 -s www-data 2>/dev/null
-adduser -u 82 -D -S -G www-data www-data
-
-# The database container must be available before starting wp setup
-# Waiting for database container to be available
-while ! mysqladmin ping -h"${MYSQL_HOST}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
+# The database container must be available before continuing with the wp setup
+# Waiting for proper database to be created in the database container
+while ! mysql -h"${MYSQL_HOST}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" -D"${MYSQL_DATABASE}" 2>/dev/null; do
 	echo "Waiting for MySQL server to start..."
 	sleep 2
 done
@@ -309,13 +305,17 @@ echo "MySQL server is up and running.."
 # The `if` statement below is needed to avoid executing the following steps when the container is restarted
 if ! $(wp core is-installed --allow-root --path=/var/www/html/); then
 
+	# Both [www-data] user and [www-data] group must be present for php-fpm to run as non-root user 
+	addgroup -g 82 -s www-data 2>/dev/null
+	adduser -u 82 -D -S -G www-data www-data
+
 	echo "Installing WordPress..."
 
 	# Creating the directory where WordPress files (website) will be installed
 	mkdir -p /var/www/html
 	cd /var/www/html
 
-	# Downloading `wp-cli` (WordPress Command Line Interface) tool to manage WordPress installation
+	# Downloading `wp-cli` (WordPress Command Line Interface) tool to manage manual WordPress installation
 	curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 	chmod +x wp-cli.phar
 	mv wp-cli.phar /usr/local/bin/wp
@@ -350,6 +350,228 @@ fi
 echo "Starting php-fpm..."
 exec $PHP_FPM -F
 
+```  
+  
+### 4. Customizing the database container.  
+
+Setting up MariaDB in a custom image. This is mainly done for educational purposes and will allow us to better understand how the database shall be set up and how it interacts with the wordpress container.  
+The custom image is based on `alpine:latest` official image. It will also be a slightly lighter than the official `mariadb` image.  
+
+```dockerfile
+# This will create a mariadb image with alpine as base image
+FROM alpine:latest
+
+RUN apk update && apk upgrade && apk add --no-cache \
+	mariadb \
+	mariadb-client
+
+EXPOSE 3306
+
+COPY ./db-setup.sh /tmp/db-setup.sh
+
+ENTRYPOINT ["sh", "/tmp/db-setup.sh"]
+
+CMD ["mariadbd", "--user=mysql"]
+
+```
+The heart of the setu is the `db-setup.sh` script.  
+
+```bash
+#!/bin/sh
+echo "Starting db-setup.sh script..."
+
+# Preparing mariadb for installation
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+
+	# echo "Creating /run/mysqld and /var/lib/mysql directories..."
+	mkdir -p /run/mysqld /var/lib/mysql
+	chown -R mysql:mysql /var/lib/mysql /run/mysqld
+
+	# echo "Setting up mariadb config, network and access..."
+	sed -i 's/skip-networking/# skip-networking/g' /etc/my.cnf.d/mariadb-server.cnf
+	sed -i 's/#bind-address=0.0.0.0/bind-address=0.0.0.0/g' /etc/my.cnf.d/mariadb-server.cnf
+
+	#echo "Installing mariadb base..."
+	mariadb-install-db --user=mysql --datadir=/var/lib/mysql --skip-test-db
+else
+	echo "MariaDB is already installed..."
+fi
+
+# Setting up mariadb root password, creating database and user
+if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then 
+
+	cat << EOF > /tmp/setup.sql
+		USE mysql;
+		FLUSH PRIVILEGES;
+		DELETE FROM mysql.user WHERE User='';
+		DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+		ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+		CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE} DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+		CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+		GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
+		FLUSH PRIVILEGES;
+EOF
+
+	mariadbd --user=mysql --bootstrap < /tmp/setup.sql
+	rm -rf /tmp/setup.sql
+
+	echo "Database setup is done..."
+else
+	echo "Database already exists..."	
+fi
+
+exec "$@"
 ```
 
+The `db-setup.sh` script is responsible for setting up the database. The evironment variables, used in the script, are defined in the `.env` file and passed to the containers `mariadb` and `wordpress` in the `docker-compose.yaml` file.  
 
+```yaml
+version: '3.9'
+
+services:
+  # Webserver
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-server
+    depends_on:
+      - wordpress
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - wordpress:/var/www/html
+    networks:
+      - wordpress_network
+    restart: always
+
+  # Database
+  mariadb:
+    container_name: database
+    build: ./mariadb
+    image: mariadb:custom
+    env_file:
+      - .env
+    volumes:
+      - database:/var/lib/mysql
+    networks:
+      - wordpress_network
+    restart: always
+
+  # Wordpress + PHP-FPM 8.2 on Alpine
+  wordpress:
+    container_name: wordpress-alpine
+    build: ./wordpress
+    image: wordpress:custom
+    depends_on:
+      - mariadb
+    env_file:
+      - .env
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - wordpress_network
+    restart: always
+
+volumes:
+  wordpress:
+    driver: local
+    name: wordpress_data_volume
+    driver_opts:
+      type: none
+      o: bind
+      device: ./wordpress_data
+
+  database:
+    driver: local
+    name: database_data_volume
+    driver_opts:
+      type: none
+      o: bind
+      device: ./database_data
+  
+networks:
+   wordpress_network:
+     name: wordpress_network
+     driver: bridge
+
+```
+
+The next step will be to customize the `nginx` container.  
+
+### 5. Customizing the nginx container.  
+
+The nginx container will be customized to serve the static files and to reverse proxy the requests to the wordpress container only, including `/wp-admin`, `/wp-login.php`, `/phpmyadmin`.
+
+```Dockefile
+# This will build the NGINX custom image
+FROM alpine:latest
+
+RUN apk update && apk upgrade && apk add --no-cache \
+	nginx \
+	openssl
+
+RUN mkdir -p /etc/nginx/ssl /run/nginx
+
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+	-subj "/C=FR/ST=IDF/L=Paris/O=42Paris/OU=sbocanci/CN=sbocanci.42.fr" \
+	-keyout /etc/nginx/ssl/sbocanci.42.fr.key \
+	-out /etc/nginx/ssl/sbocanci.42.fr.crt
+
+COPY ./nginx.conf /etc/nginx/nginx.conf
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+
+```  
+The `openssl` command is used to generate a self-signed certificate to allow `https` connection. The browser will display a warning that the certificate is not trusted because of its self-signed nature.  
+
+The following `nginx.conf` file is copied in the nginx container in the `/etc/nginx/` folder.  
+
+
+```nginx
+events {
+	worker_connections  1024;
+}
+
+http {
+	
+	server {
+
+		listen 80;
+		listen [::]:80 default_server;
+
+		server_name localhost sbocanci.42.fr;
+		return 301 https://$server_name$request_uri;
+	}
+
+	server {
+
+		listen 443 ssl default_server;
+		listen [::]:443 ssl default_server;
+
+		server_name localhost sbocanci.42.fr;
+		root /var/www/html;
+		index index.php index.html index.htm;
+
+		error_log /var/log/nginx/error.log;
+		access_log /var/log/nginx/access.log;
+
+		location / {
+			try_files $uri $uri/ /index.php?$args;
+		}
+
+		location ~ \.php$ {
+			fastcgi_pass wordpress-alpine:9000;
+			try_files $uri =404;
+			fastcgi_split_path_info ^(.+\.php)(/.+)$;
+			fastcgi_index index.php;
+			include fastcgi_params;
+			fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+			fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+		}
+
+		ssl_protocols TLSv1.2 TLSv1.3;
+		ssl_certificate /etc/nginx/ssl/sbocanci.42.fr.crt;
+		ssl_certificate_key /etc/nginx/ssl/sbocanci.42.fr.key;
+	}
+}
+```
