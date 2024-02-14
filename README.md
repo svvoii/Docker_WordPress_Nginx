@@ -18,7 +18,7 @@ Linux based OS
 
 How to install docker (docker engine) and docker-compose is not covered here. There are plenty resources online which explain it very well.  
 [Official docker docs](https://docs.docker.com/engine/install/) are a good place to start. You probably wont need anything else.  
-[Docker-compise](https://docs.docker.com/compose/install/) is a bit different story, it runs on Python and requires respective packages to be installed on your host machine. It also can be installed along with Docker desktop, which is a bit easier way to get it.  
+[Docker-compose](https://docs.docker.com/compose/install/) is a bit different story, it runs on Python and requires respective packages to be installed on your host machine. It also can be installed along with Docker desktop, which is a bit easier way to get it.  
 
 #### HOW TO USE
 There is a `Makefile` that helps to run docker commands to build, run, stop, remove containers and volumes.  
