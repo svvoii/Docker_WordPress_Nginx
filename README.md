@@ -6,9 +6,19 @@ This repo contains a docker-compose file that will set up a wordpress site with 
 This README will explain the steps of the set up for educational purposes.   
 The images used are the official images from docker hub. The main purpose is to show how these services can be set up and how they interact with each other.  
 `nginx` is used to serve the static files and to reverse proxy the requests to the wordpress container.  
-`wordpress` is used to serve, craete and manage the wordpress site.
-`mysql` is used to store the data of the wordpress site.
+`wordpress` is used to serve, create and manage the wordpress site.
+`mysql` or `mariadb` is used to store the data of the wordpress site.
 `phpmyadmin` (as a part of wordpress container) is used to manage the mysql database.  
+
+### REQUIREMENTS  
+
+Linux based OS
+`make` must be installed  
+`docker` and `docker-compose` must be installed  
+
+How to install docker (docker engine) and docker-compose is not covered here. There are plenty resources online which explain it very well.  
+[Official docker docs](https://docs.docker.com/engine/install/) are a good place to start. You probably wont need anything else.  
+[Docker-compise](https://docs.docker.com/compose/install/) is a bit different story, it runs on Python and requires respective packages to be installed on your host machine. It also can be installed along with Docker desktop, which is a bit easier way to get it.  
 
 #### HOW TO USE
 There is a `Makefile` that helps to run docker commands to build, run, stop, remove containers and volumes.  
@@ -54,7 +64,11 @@ services:
 ```  
 This is the basic set up of the docker-compose file. By running `docker-compose up -d` the containers will be created and started.  
 `make up` is used to run the docker-compose command.  
-By visiting `http://localhost` the nginx welcome page shall be displayed. At this point the webserver portion of the set up shall be considered as working.
+By visiting `http://localhost` the nginx welcome page shall be displayed. At this point the webserver portion of the set up shall be considered as working.  
+
+Running the following command from the terminal will allow to log into the container and explore it from inside:  
+`docker exec -it <container_id_or_name> /bin/bash` containers must be up for the command to work.  
+`<container_id_or_name>` this can be found in the output of the `make ls` command from the root of this repo once the containers are up (running).  
 
 #################################################
 
