@@ -38,7 +38,8 @@ Commands:
 Bellow are the stages and steps of the set up. Starting with the basic set with pre-built images from docker hub.  
 Following steps will show how to build custom images for wordpress, nginx and mysql/mariadb. All the images will be based on `alpine:latest` official image, which is the lightest image. The end result will be a custom wordpress site with custom domain name and ssl self-signed certificate. The size of the images will be around 450MB.  
 
-### 1. Basic Set Up
+### 1. Basic Set Up  
+
 ```yaml
 version: '3.9'
 
@@ -62,8 +63,9 @@ services:
     image: php:7.4-fpm-alpine
     container_name: php-fpm
 ```  
-This is the basic set up of the docker-compose file. By running `docker-compose up -d` the containers will be created and started.  
-`make up` is used to run the docker-compose command.  
+This is the basic set up of the docker-compose file `docker-compose.yaml`.  
+`make up` is used to run the docker-compose command `docker-compose up -d`. This will download respective docker images, create containers and start/run them.  
+  
 By visiting `http://localhost` the nginx welcome page shall be displayed. At this point the webserver portion of the set up shall be considered as working.  
 
 Running the following command from the terminal will allow to log into the container and explore it from inside:  
