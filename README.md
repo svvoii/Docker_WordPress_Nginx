@@ -69,7 +69,7 @@ This is the basic set up of the docker-compose file `docker-compose.yaml`.
 By visiting `http://localhost` the nginx welcome page shall be displayed. At this point the webserver portion of the set up shall be considered as working.  
 
 Running the following command from the terminal will allow to log into the container and explore it from inside:  
-`docker exec -it <container_id_or_name> /bin/bash` containers must be up for the command to work.  
+`docker exec -it <container_id_or_name> /bin/sh` containers must be up for the command to work.  
 `<container_id_or_name>` this can be found in the output of the `make ls` command from the root of this repo once the containers are up (running).  
 
 #################################################
